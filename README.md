@@ -1,3 +1,76 @@
+# Building Large Language Models from Scratch (Raschka, 2024)
+
+## Chap 1: Understanding LLMs
+- Basics
+- Applications
+- Building & Using
+- Transformer architecture
+- Example datasets
+- GPT architecture
+- LLM buildplan
+
+## Chap 2: Text data
+- Word embeddings
+- Text tokens
+- Tokens --> token IDs
+- Special context tokens
+- Byte pair encoding
+- Sliding-window data sampling
+- Token embeddings
+- Word position encoding
+
+## Chap 3: Attention
+- The long-sequence problem
+- Capturing data dependencies with attention
+- Self-attention
+    - with trainable weights
+    - weights for _all_ input tokens
+- Self-attention with trainable weights
+    - Computation
+    - Python class definition
+- Causal attention
+    - masking
+    - dropout
+    - Python class definition
+- Multihead attention
+    - stacking single-head attention layers
+    - weight splits
+
+## Chap 4: GPT from scratch
+- Architecture code
+- Layer normalization
+- Feed-forward nets with GELU (Gaussian error linear unit) activations
+- Shortcut connections
+- Attention & linear layers in a transformer block
+- Model code
+- Generating text
+
+## Chap5: Pretraining - unlabeled data
+- Evaluating generative text models
+    - Using GPT to generate text
+    - Text generation loss
+    - Training & validation set loss
+- LLM training
+- Reducing randomness
+    - Temperature scaling
+    - top-k sampling
+    - Modifying the text generator
+- PyTorch: model file load/save
+- Loading pretrained weights from OpenAI
+
+## Chap6: Finetuning for classification
+- Instruction- vs Classification-finetuning
+- Dataset prep
+- Dataloaders
+- Initializing with pretrained weights
+- Classification head
+- Classification loss & accuracy
+- Finetuning - supervised data
+- LLM as a spam classifier
+
+## Chap7: Instruction finetuning
+- TODO
+
 ## Appendix A: Intro to PyTorch
 - What is PyTorch?
     - 3 core components
