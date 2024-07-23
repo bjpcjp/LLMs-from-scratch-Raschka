@@ -1,4 +1,5 @@
 # Building Large Language Models from Scratch (Raschka, 2024)
+(edits in progress)
 
 ## Chap 1: Understanding LLMs
 - Basics
