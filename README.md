@@ -185,4 +185,8 @@
 - Dataset prep
 - Model init
 - LoRA
-- 
+    - listing e.5 implementation
+    - image e.3
+    - listing e.6 LinearWithLora layer to replace linear layers
+    - image e.4 architecture
+    - listing e.7 - finetuning with LoRA layers
