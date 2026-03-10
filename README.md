@@ -1,5 +1,6 @@
 # Building Large Language Models from Scratch (Raschka, 2024)
-(edits in progress)
+- [reader forum (Manning Publications)](https://livebook.manning.com/forum?product=raschka&page=1)
+- [Sebastian's book Github](https://github.com/rasbt/LLMs-from-scratch)
 
 ## Chap 1: Understanding LLMs
 - Basics

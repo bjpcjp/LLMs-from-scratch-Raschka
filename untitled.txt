@@ -1,0 +1,303 @@
+chapter 1 - intro
+    - version info
+    - 1.4 - transformers
+    - 1.5 - common datasets
+    - 1.6 - GPT architecture
+    - 1.7 - dev plan
+
+chapter 2 - text data
+    - 2.1 - word embeddings
+    - 2.2 - tokenization 
+            - the-verdict.txt --> raw_text --> preprocessed
+
+    - 2.3 - tokens to IDs
+            - allwords --> vocab, vocab_size
+            - SimpleTokenizerV1 --> tokenizer
+
+    - 2.4 - special context tokens
+            - all_tokens, <|endoftext|>", "<|unk|> --> vocab
+            - SimpleTokenizerV2 --> tokenizer
+
+    - 2.5 - byte pair encoding (BPE)
+            - version, tiktoken, gpt2 (encoding) --> tokenizer --> integers <--> strings
+
+    - 2.6 - "sliding window" sampling
+            - the-verdict.txt --> raw_text --> enc_text, 
+            - context_size, x, y --> context, desired
+            - Dataset --> GPTDatasetV1 --> dataset
+            - DataLoader --> dataloader
+                (txt, batch_size, max_length, stride, shuffle?, drop_last? num_workers)
+            - dataloader --> data_iter --> first_batch, second_batch
+            - dataloader --> data_iter --> inputs, targets
+
+    - 2.7 - token embeddings
+            - input_ids, vocab_size, output_dim --> embedding_layer
+            - embedding_layer(input_ids)
+
+    - 2.8 - encoding word positions (absolute vs relative)
+            - input_ids, vocab_size, output_dim --> token_embedding_layer
+            - max_length, create_dataloader_v1 --> dataloader --> data_iter --> inputs, targets
+            - inputs --> token_embeddings --> token_embeddings(input_ids)
+            - GPT-style absolute encoding
+            - context_length, output_dim --> pos_embedding_layer --> pos_embeddings, input_embeddings
+
+chapter 3 - attention
+    - 3.1 - long-sequence problem
+    - 3.2 - attention
+
+    - 3.3 - self-attention (SA)
+        - 3.3.1 - SA, no trainable weights
+            - inputs, query, attn_scores_2 <-- dot products
+            - normalize
+                - attn_scores_2 --> attn_weights_2_tmp
+            - softmax
+                - softmax_naive, attn_weights_2_tmp_naive
+                - use Pytorch method
+            - context vector
+                - query --> context_vec_2
+
+        - 3.3.2 - attention weights, all tokens
+            - inputs --> attn_scores (do loop of dot products)
+            - inputs --> attn_scores (transpose)
+            - attn_scores --> attn_weights (normalize)
+            - row_2_sum
+            - attn_weights @ inputs --> all_context_vecs
+
+    - 3.4 - attention with trainable weights (scaled dot-product attention)
+        - 3.4.1 - step-by-step
+            - define one context vector
+            - initialize Wq (query weights), Wk (key weights), Wv (value weights) 
+            - x_2, d_in, d_out
+            - x_2, W_query --> query_2
+            - x_2, W_key   --> key_2
+            - x_2, W_value --> value_2
+            - inputs, W_key --> keys
+            - inputs, W_value --> values
+            - query_2, keys --> keys_2 --> attn_score_22
+            - query_2, keys.T --> attn_scores_2
+            - keys --> d_k
+            - attn_scores_2, d_k --> attn_weights_2
+            - attn_weights_2 @ values --> context_vec_2 
+
+        - 3.4.2 - scaled dot-product attention
+            -               SelfAttention_v1 --> sa_v1
+            - nn.Linear --> SelfAttention_v2 --> sa_v2
+
+    - 3.5 - causal (masked) attention
+        - sa_v2 --> queries, keys, 
+        - queries, keys --> attn_scores --> attn_weights
+        - context_length, mask_simple --> masked_simple
+        - row_sums, masked_simple_norm
+        - mask, masked, attn_weights
+
+        - 3.5.2 - dropout
+            - dropout(attn_weights)
+
+        - 3.5.3 - compact causal attention class
+            - batch
+            - CausalAttention, context_length --> ca --> context_vecs
+
+    - 3.6 - multihead attention
+        - 3.6.1 - stack wrapper
+            - d_in, d_out, context_length, num_heads --> MultiHeadAttentionWrapper --> mha
+
+        - 3.6.2 - multihead attention w/ weight splits
+            - MultiHeadAttention
+                - batched matrix multiplication
+                - first_head --> first_res, second_head --> second_res
+                - MultiHeadAttention --> mha --> context_vecs
+
+chapter 4 - GPT from scratch
+    - 4.1 - coding
+        - GPT_CONFIG_124M --> DummyGPTModel --> model
+        - txt1, txt2, tokenizer --> batch
+        - model(batch) --> logits
+
+    - 4.2 - layer normalization
+        - batch_example --> layer --> out
+        - mean, var
+        - LayerNorm (eps, scale, shift)
+        - batch_example --> ln --> out_ln, mean, var
+
+    - 4.3 - GELU (gaussian error LU) activations
+        - GELU
+        - cfg --> FeedForward --> ffn(x) --> out
+
+    - 4.4 - shortcut connections
+        - ExampleDeepNeuralNetwork --> model_without_shortcut, model_with_shortcut
+        - print_gradients
+
+    - 4.5 - transformer blocks
+        - TransformerBlock --> block
+
+    - 4.6 - coding GPT model
+        - GPTModel, batch --> model --> out
+        - total_params, total_params_gpt2, total_size_bytes, total_size_mb
+
+    - 4.7 - generating text
+        - generate_text_simple(model, idx, max_new_tokens, context_size) --> idx
+        - start_context --> encoded --> encoded_tensor
+        - encoded_tensor, generate_text_sipmle --> out --> decoded_text
+
+chapter 5 - pretraining, unlabeled data 
+    - 5.1
+        - GPTModel, GPT_CONFIG_124M --> model
+        - text_to_token_ids, token_ids_to_text
+        - generate_text_simple --> token_ids
+
+    - 5.1.2 - loss
+        - inputs, model --> logits --> probas --> token_ids
+        - text_idx --> target_probas_1, target_probas_2 --> log_probas, avg_log_probas
+        - cross entropy loss
+            - logits, targets --> logits_flat, targets_flat --> loss
+        - perplexity
+
+    - 5.1.3 - loss calc
+        - file_path --> text_data --> total_characters, total_tokens
+        - text_data, train_ratio --> train_data, val_data
+        - create_dataloader_v1 --> train_loader, val_loader
+        - calc_loss_batch --> calc_loss_loader
+        - loader, model, device --> train_loss, val_loss ****CUDA WORKS****
+
+    - 5.2 - training
+        - train_model_simple, evaluate_model, generate_and_print_sample
+        - adamw optimizer
+        - GPT_CONFIG_124M --> model --> train_model_simple
+        - plot_losses
+
+    - 5.3 - decoding strategies
+        - tokenizer --> generate_text_simple --> token_ids
+
+        - 5.3.1 - temperature scaling
+            - vocab --> inverse_vocab
+            - next_token_logits --> probas --> next_token_id
+            - probas, multinomial --> next_token_id
+            - probas --> print_sampled_tokens
+            - softmax_with_temperature, temperatures --> scaled_probas
+
+        - 5.3.2 - top-k sampling
+            - top_k, topk_probas
+            - torch.where --> new_logits
+
+        - 5.3.3 - modified text generator
+            - generate --> token_ids
+
+    - 5.4 - load/save models
+        - checkpoint, model, optimizer
+
+    - 5.5 - loading pretrained weights from OpenAI
+        - github --> filename
+        - gpt_download (.py) --> download_and_load_gpt2 --> settings, params
+        - params['wte'] (embed layer weights tensor)
+        - model_configs, model_name, NEW_CONFIG --> GPTModel --> gpt 
+        - assign, load_weights_into_gpt
+        - generate --> token_ids
+
+chapter 6 - classification finetuning
+    - 6.1 - classification FT vs instruction FT
+    
+    - 6.2 - dataset
+        - extracted_path --> data_file_path --> download_and_unzip_spam_data --> df
+        - df --> create_balanced_dataset
+        - random_split --> train_df, validation_df, test_df
+
+    - 6.3 - data loaders
+        - tokenizer
+        - SpamDataset --> train_dataset, val_dataset, test_dataset
+        - DataLoader --> train_loader, val_loader, test_loader
+
+    - 6.4 - init model with pretrained weights
+        - CHOOSE_MODEL, INPUT_PROMPT, BASE_CONFIG, model_configs
+        - gpt_download (.py) --> download_and_load_gpt2
+        - model_size, settings, params, model
+        - text_1, model --> token_ids
+
+    - 6.5 - classification head
+        - model.out_head
+        - tokenizer --> inputs --> outputs
+
+    - 6.6 - classification loss & accuracy
+        - calc_accuracy_loader
+        - train_accuracy, val_accuracy, test_accuracy
+        - calc_loss_batch_v2 --> calc_loss_loader
+
+    - 6.7 - finetuning - supervised data
+        - train_classifier_simple
+        - evaluate_model
+        - epochs_tensor, examples_seen_tensor --> plot_values
+        - calc_accuracy --> train_accuracy, val_accuracy, test_accuracy
+
+    - 6.8 - using LLM as spam classifier
+        - text_1, text_2 --> classify_review
+
+chapter 7 - instruction fine-tuning
+    - 7.1 - intro
+    - 7.2 - dataset
+        - download_and_load_file (instruction_-data.json)
+        - alpaca dataset format
+        - format_entry, model_input, desired_response
+        - train_portion --> train_data
+        - test_portion --> test_data
+        - val_portion --> val_data
+
+    - 7.3 - organize into batches - custom collate function
+        - InstructionDataset
+        - custom_collate_draft_1, custom_collate_draft_2
+        - batch, custom_collate_draft_2 --> inputs, targets
+        - batch, custom_collate_fn      --> inputs, targets
+        - logits_1, targets_1 --> loss_1
+        - logits_2, targets_2 --> loss_2
+        - logits_2, targets_3 --> loss_3
+
+    - 7.4 - data loaders
+        - customized_collate_fn
+        - InstructionDataset --> train_dataset, val_dataset
+        - DataLoader --> train_loader, val_loader, 
+
+    - 7.5 - load pretrained LLM (GPT-2-medium)
+        - CHOOSE_MODEL, model_size, settings, params, model --> load_weights_into_gpt
+        - format_input --> input_text
+        - generate --> token_ids
+        - generated_text --> token_ids_to_text
+
+    - 7.6 - finetuning
+        - calc_loss_batch_v3 --> calc_loss_loader_v3 --> train_loss, val_loss
+        - ************************
+        - original test: tried to allocate 20MB; GPU capacity 5.79GB
+            - 5.77GB used (5.44GB PyTorch, 0.193GB unallocated)
+        - batch_size 8 --> 4:
+            - 5.77GB used (5.43GB PyTorch, 0.198GB unallocated)
+            
+
+appndx  A
+appndx  B
+appndx  C
+appndx  D
+appndx  E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
